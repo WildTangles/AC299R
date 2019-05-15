@@ -13116,7 +13116,18 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Eccentricity-Dependent-Neural-Networks">Eccentricity Dependent Neural Networks<a class="anchor-link" href="#Eccentricity-Dependent-Neural-Networks">&#182;</a></h1><h2 id="Manish-Reddy-Vuyyuru-(AC299R)">Manish Reddy Vuyyuru (AC299R)<a class="anchor-link" href="#Manish-Reddy-Vuyyuru-(AC299R)">&#182;</a></h2>
+<h1 id="Parallel-Newton-Step-for-the-SC-OPF-problem">Parallel Newton Step for the SC-OPF problem<a class="anchor-link" href="#Parallel-Newton-Step-for-the-SC-OPF-problem">&#182;</a></h1><p><strong>CS205 Final Project, Group 4</strong></p>
+<p><strong>Srivatsan Srinivasan, Manish Vuyyuru, Aditya Karan, Cory Williams</strong></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Fork it on Github!</p>
+<p><a href="https://github.com/Srivatsan-Srinivasan/cs205-final-project.git">https://github.com/Srivatsan-Srinivasan/cs205-final-project.git</a></p>
+
 </div>
 </div>
 </div>
@@ -13124,291 +13135,76 @@ div#notebook {
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Table-of-Contents">Table of Contents<a class="anchor-link" href="#Table-of-Contents">&#182;</a></h2><ol>
-<li><p><a href="#Introduction">Eccentricity Dependent Neural Networks</a></p>
+<li><p><a href="#IntroductionAndMotivation">Introduction and Motivation</a></p>
+<ol>
+<li><a href="#HowWorkIsDifferent">How is our work different from other works that tackle this problem?</a></li>
+</ol>
 </li>
-<li><p><a href="#PreviousResults">Previous Results</a></p>
+<li><p><a href="#Problem">Problem</a></p>
+<ol>
+<li><p><a href="#NotationAndPreliminaries">Notation and Preliminaries</a></p>
 </li>
-<li><p><a href="#DataSampling">Sampling For Retinal Eccentricity</a></p>
+<li><p><a href="#DCPowerFlowModel">DC Power Flow Model</a></p>
 </li>
-<li><p><a href="#Augmentation">Data Augmentation</a></p>
+<li><p><a href="#TwoLevelSerialMultilevelSolver">Two-level Serial Multilevel Solver</a></p>
 </li>
-<li><p><a href="#NetworkDesign">Network Design</a></p>
+</ol>
 </li>
-<li><p><a href="#NetworkTraining">Network Training And Evaluation</a></p>
+<li><p><a href="#DescriptionOfParallelSolution">Description of Parallel Solution</a></p>
+<ol>
+<li><p><a href="#Block1">Block 1: Generation of the system with contingencies</a></p>
 </li>
-<li><p><a href="#Invariance">Scale, Translation and Clutter Invariance</a></p>
+<li><p><a href="#Block2">Block 2: Independent System Design and Distributing the Global System in Local Systems - Distributed Solution of step 5 in Algorithm 1</a></p>
+<ol>
+<li><p><a href="#TwoLevelPreliminaries">Motivation and two-level distributed SC-OPF preliminaries for K contingencies</a></p>
+</li>
+<li><p><a href="#DistributionPlan">Distribution Plan for global to local system for K contingencies</a></p>
+</li>
+<li><p><a href="#DistributedCalculation">Distributed Calculation of Reduced System (Level l=0 -&gt; l=1)</a></p>
+</li>
+</ol>
+</li>
+<li><p><a href="#Block3">Block 3:  Distributed Terminal Level Solution for K contingencies - Distributed Solution of step 6 in Algorithm 1</a></p>
+</li>
+</ol>
+</li>
+<li><p><a href="#ModelsAndData">Models and Data</a></p>
+</li>
+<li><p><a href="#ParallelApplicationAndProgrammingModels">Parallel Application and Programming Models</a></p>
+</li>
+<li><p><a href="#COAF">Complications, Overheads and Advanced Features in the project</a></p>
+<ol>
+<li><p><a href="#Complications">Complications: Communication and Synchronization overheads</a></p>
+</li>
+<li><p><a href="#AdvancedFeatures">Advanced Features and Modules</a></p>
+</li>
+</ol>
+</li>
+<li><p><a href="#PerformanceEvaluationAndOverheads">Performance Evaluation and Overheads</a></p>
+</li>
+<li><p><a href="#Discussion">Discussion</a></p>
+</li>
+<li><p><a href="#LFC">Lessons, Future Work and Conclusion</a></p>
+<ol>
+<li><p><a href="#Lessons">Lessons</a></p>
 </li>
 <li><p><a href="#FutureWork">Future Work</a></p>
 </li>
+<li><p><a href="#Conclusion">Conclusion</a></p>
+</li>
+</ol>
+</li>
 <li><p><a href="#References">References</a></p>
 </li>
-</ol>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Eccentricity-Dependent-Neural-Networks">Eccentricity Dependent Neural Networks<a name="Introduction" /><a class="anchor-link" href="#Eccentricity-Dependent-Neural-Networks">&#182;</a></h3><p>Modern convolutional neural networks have demonstrated remarkable performance in visual recognition on diverse datasets. Yet, these computer vision models lag behind human vision in several ways. Human vision's simultaneous robustness to scale, translation and clutter is unparalleled in computer vision models[1][2]. We propose to consider a convolutional neural network architecture more closely modelled after the ventral stream to address these issues. In particular, we are interested in incorporating retinal eccentricity, where parts of images falling directly onto the fovea are the sharpest and get progressively blurrier farther out. Previous works have argued the computational role of retinal eccentricity, both from a theortical and experimental perspective[3] and by direct evaluation on MNIST-derived datasets[1][2].</p>
-<p><strong>Executive Summary: We demonstrate that a neural network incorporating retinal eccentricity can be trained to a level approaching state-of-the-art models on ImageNet. We note key problems with the current models and ways to mitigate it going forwards. We provide very rough and preliminary evaluations of the network's robustness to scale, clutter and translation transformations.</strong></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Previous-Results">Previous Results<a name="PreviousResults" /><a class="anchor-link" href="#Previous-Results">&#182;</a></h3><p>The computational role of retinal eccentricity has been studied by various members of the groups in the past. In [3], Poggio et al. argue that retinal eccentricity could be viewed as an extension of M-theory. Notice that mordern convolutional neural networks require a large amount of image augmentation during training to be more robust to image transformations. On the other hand, humans do not need to be shown an object from many different angles before being to recognize it under transformations. M-theory argues that the brain accomplishes this by computing a transformation-invariant representation of an image before visual recognition. Poggio et al. argue that an extension to M-theory focused on the translation-scale invariance tradeoff typical of primates/humans agrees spectacularly with the image sampling that occurs as a result of retinal eccentricity. This was further verified via comparisons against biological measurements of macaque monkeys. The argument goes as follows. Considering the region in scale-translation space that all possible scale transformations of an object must lie:</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1b7qJ-UvcJZRBsmJsBmU7NafittZRFH7z">
-Figure 1. Taken from [3], the region in scale (S)-translation (X) space that all possible scale transformations can take form a truncated pyramid.</p>
-<p>Without going into the details, intuitively, you could then generate an invariant representation by projecting an image to all points in this triangle and sampling over the space as shown below:</p>
-<p><img src="http://drive.google.com/uc?export=view&id=184QLWsywwpJDbZZ_bNdmg-3NJIvCD0_S">
-Figure 2. Taken from [3], sampling (represented by red dots) in the scale (S) - translation (X) space that all possible scale transformations can take.</p>
-<p>Additionally, previous works in the group [1][2] have demonstrated on MNIST-derived datasets that by incorporating this retinal eccentricity and pooling over the scales, neural networks could be made more robust to scale invariance and perform better under crowding. Further studies on a more challenging natural image dataset could be more informative.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1-Uppeuwpotzl_RWmvVLZx5KhsfbN-Cti">
-Figure 3. Taken from [2], an example of some of the MNIST-derived datasets used by previous studies.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Sampling-For-Retinal-Eccentricity">Sampling For Retinal Eccentricity<a name="DataSampling" /><a class="anchor-link" href="#Sampling-For-Retinal-Eccentricity">&#182;</a></h3><p>To incorporate retinal eccentricity into our networks, we will pre-sample the images approriately before feeding into our neural network. We will use a simple approximation of the full invariant representation generated by eccentricity. Consider an image from ImageNet[4] (a challenging natural image dataset):</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1vmkD04W3KCcKBHN4j3CA-BdMPrpO9yl1">
-Figure 4. Sample image of ducks from ImageNet train split.</p>
-<p>We aim to generate a computationally cheap approximation of retinal eccentricity, not replicate it exactly. Given this, we are looking to transform the image in several ways.</p>
+<li><p><a href="#Appendix">Appendix</a></p>
 <ol>
-<li>Change the scale of the image.</li>
-<li>Change the sharpness of the image.</li>
-<li>Vary the fixation points.</li>
-</ol>
-<p>We ultimately chose to focus on 1. and 2. as the best way to pad the image for 3. was unclear and we were sufficiently happy with starting off with a baseline with a single central fixation point.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1Y8u74m2zDaotUZhOl4cUyAG4L7-3N93T">
-Figure 5. Sample image of ducks with a single central fixation point indicated by a red dot.</p>
-<p>To vary the scale of the image, we took crops of varying sizes and downscaled all the crops to the smallest crops.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1UDJfRBYuyKwcuCI4hoIgGD6Jf-oPD-Of">
-Figure 6. Sample image of ducks with red bounding boxes for location of crops to be downscaled.</p>
-<p>We initially experimented with just generating transformations of the image focusing on changing the scale, and relying on bi-cubic interpolations that will be performed to accomplish this to vary the sharpenss of the image.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1a6ckFuUO7wUonnYiAmIIWYvIqJtk8ksZ">
-Figure 7. Sample image of ducks with only scale transformations.</p>
-<p>However, as shown above, this leads to artifacts on the edges of the images. Instead, we tried applying gaussian blurs of various radii and sub-sampling the original image. Additionally, this also stuck more closely to the argument for the computational role of retinal eccentricity as the gaussian blurs approximate a low-pass filter.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1ufa9rOy9BS-ZqBskuXpKZK3tS_Q8JlFo">
-Figure 8. Sample image of ducks with gaussian blurs and scale transformations.</p>
-<p>Notice now the absence of artifacts on the edges of objects in the transformed images.</p>
-<p>Specifically, in our final version of the image sampling process, we took crops @ 40x40, 80x80, 160x160, 320x320. Then we convolved the 4 crops with gaussian kernels of radius 0, 1, 2, 4 respectively. Finally, we subsampled the x- and y- axis of the images evenly to downsample all crops to 40x40.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Data-Augmentation">Data Augmentation<a name="Augmentation" /><a class="anchor-link" href="#Data-Augmentation">&#182;</a></h3><p>We follow the data augmentation typically employed for training neural networks on ImageNet with a few notable differences.</p>
-<ol>
-<li>We do not perform any scale transformations.</li>
-<li>We do not perform any translational transformations.</li>
-<li>We do not perform random image cropping.</li>
-</ol>
-<p>The reasons for 1. and 2. are that we are aruging that the data sampling procedure above generates a scale-translation invariant representation of the image. We will not be able to show this if we also employ scale and translation transformations during training. The reason for 3. is that that taking random image crops would effectively correspond to multiple fixation points (see 3. in sampling for retinal eccentricity above). We will stick to the simplest case of a single central fixation. We used the following augmentations:</p>
-<ol>
-<li>Left-Right Flip (applied 50% of the time)</li>
-<li>Brightness (uniform distribution between 0, 32./255.)</li>
-<li>Saturation (uniform distribution between 0.5, 1.5)</li>
-<li>Hue (uniform distribution between -0.2, 0.2)</li>
-<li>Contrast (uniform distribution between 0.5, 1.5)</li>
-</ol>
-<p><img src="http://drive.google.com/uc?export=view&id=1z5vL87XaDbCCo_Wvm-d-mnhK4TUCOfjo">
-Figure 9. Sample of typical augmentations. Top: Original Image, Middle: Flip, Bottom: Minimum Contrast Augmentation</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Network-Design">Network Design<a name="NetworkDesign" /><a class="anchor-link" href="#Network-Design">&#182;</a></h3><p>We experimented with several classes of network designs. The general requirement for any design was that:</p>
-<ol>
-<li>Accept image sampled to replicate retinal eccentricity (4 crops)</li>
-<li>Incorporate information across the crops at some stage before classification</li>
-</ol>
-<p>Previous works by Chen et al. [1] and Colokitin et al. [2], used similar approaches to their network design. The networks accepted the 4 crops concatenated along the color channel axis. For example, for 4 crops of the shape 40 x 40 x 3, the networks accepted a tensor of shape 40 x 40 x 12 as input.</p>
-<p>Chen et al. and Colokitin et al. both incorporated information across the crops by pooling over the channels corresponding to each crop. They each investigated the effect that various configurations of the pooling has on scale, translation and clutter invariance.</p>
-<p>Specifically, Colokitin et al. considered 3 different pooling configurations. The evaluated configurations employed different extents of pooling at different locations along the network. Colokitin et al. then investigated the robustness of the networks against crowding under different pooling configurations on several MNIST-derived datasets.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=19LQHaZy8kRlNo6q4vwWJEF1YM-RJttJ3">
-Figure 10. Taken from [2]. Various pooling configurations considered. Colokitin et al. demonstrate the effects on crowding.</p>
-<p>Chen et al. also considered several different pooling configurations. Notably, Chen et al. used a pooling configuration that attempted to closely model the relationship between receptive field size and eccentricity observed in biological measurements in macaque monkeys. They investigated how various pooling configurations affected the robustness of the networks to scale, translational and clutter transformations.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1f7B_Yitov6aE7gnH4-QVppYy_qnj5oy8">
-Figure 11. Taken from [1]. A pooling configuration considered (left) that closely modelled biological measurements in macaque monkeys (right).</p>
-<p>In these networks, an implicit design choice is weight sharing. The same weights are convolved over channels corresponding to each crop.</p>
-<p>We investigated networks whose design deviated from these previous works in several ways. Notably, we consider networks who process the 4 crops (i.e. the different scales) using entirely seperate neural networks. We only incorporate information across the scales at a final layer using the hidden states from the individual networks. We evaluated several different ways of incorporating the information and the effect it has on the classification performance of the models. The models can be broadly grouped into 3 classes based on how they collate information across scale. Below, a single 'resnet18' block refers to the same full architecture as ResNet18 without the final softmax layer.</p>
-<ol>
-<li>No Scheme</li>
-</ol>
-<p>Models of this class directly combine the output from the 4 networks in a softmax layer.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=14yZvPm-yXOXYBO9i1OcLWCogW_B0Uzd4">
-Figure 12. High-level layout of networks implementing 'no scheme'.</p>
-<ol>
-<li>Voting Scheme</li>
-</ol>
-<p>Models of this class implement a voting scheme (average, max, etc.) between the 4 networks.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1yIsb6cV2XW60ijmPclX4kOyNglvNp_Up">
-Figure 13. High-level layout of networks implementing 'voting scheme'.</p>
-<ol>
-<li>Dense Scheme</li>
-</ol>
-<p>Models of this class combine the output from the 4 networks through one or several dense fully connected layers which feed into a final softmax layer.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1eH9kqAsuDWlKXnW0CFpYvttA46kOG5iV">
-Figure 14. High-level layout of networks implementing 'dense scheme'.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Network-Training-And-Evaluation">Network Training And Evaluation<a name="NetworkTraining" /><a class="anchor-link" href="#Network-Training-And-Evaluation">&#182;</a></h3><p><strong>Note: Unless otherwise stated, results here are from models trained from <em>scratch</em> on ImageNet.</strong></p>
-<p>We trained our networks on 4 GPUs using a mirrored strategy with one replica per GPU and sync replication. This helped reduce training times. Unfortunately, we were unable to scale to scale up to 8 GPUs. It is still unclear why this was the cause but we suspect it might have to do with the overhead from sync replication.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1Lvwh-7xh43n5FZMIRuTTlzJDzcZXgnmR">
-Figure 15. Taken from <a href="https://jhui.github.io/assets/tensorflow/gscale.png">https://jhui.github.io/assets/tensorflow/gscale.png</a>. Mirrored multi-GPU training of networks.</p>
-<p>It's cumbersome to cover results from all experiments on network training. We will present a few of the more interesting tests. Unless specified, models are of the 'no-scheme' as shown above. We will use a shorthand to refer to the models. When we use the term 'AlexNet x4' we are referring to a model with the 'ResNet18' blocks above in the schematic replaced with the full architecture of AlexNet without the final softmax layer. Likewise for other versions of the term such as 'ResNet50 x4'.</p>
-<p>We considered training from pre-trained models instead of training our networks from scratch. However, we saw that pre-trained networks generally performed noticeably worse. For example, consider the experiment below. We compared the performance of a pretrained ResNet50 x4 model with frozen weights, without frozen weights and a ResNet18 x4 model. Pre-trained ImageNet weights for ResNet50 were taken from Keras[5]. During this experiment, we were using weight sharing across the scales (i.e. the crops).</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1HKRNFxx3sXlKbk2_b6oTOX4bjX46Ey-y">
-Figure 16. classification performance for pre-trained networks and networks trained from scratch.</p>
-<p>We observed that the pre-trained networks performed considerably wrose than the network trained from scratch. This is a little surprising since this is a typical transfer learning setup. Perhaps a pretrained ResNet50 model did not perform well as the data distribution after retinal sampling is too different from the original ImageNet distribution. Also, it might be possible that the pretrained ResNet50 without frozen weights did not perform well for the same reason.
-might be possible that the pretrained ResNet50 x4 model with unfrozen weights did not perform well for the same reason.</p>
-<p>We also considered the effect of weight sharing in the networks. We trained two ResNet18 x4 models from scratch. One implemented weight sharing across the scales (i.e across the crops) while the other used seperate weights for each scale.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1gavWBdH1ipgzr-SILH0i8i2Bq2pCVpl7">
-Figure 17. Classification performance for networks with and without weight sharing.</p>
-<p>We observed that the network without weight sharing performed slightly better. Both networks have the same number of floating point operations for a forward pass but the network without weight sharing is vastly more over-parameterized. We expect this to have a non-trivial effect on the ability for the network to draw decision boundaries and generalise. We did not consider this more in depth in terms of how it relates back to the theory for scale-translational invariance from retinal eccentricity. We see that networks without weight sharing have a great capacity to learn (higher accuracy on the training set) but generalize only about as well as networks with weight sharing (marginally better accuracy on the validation set). We proceeded with the network without weight sharing because of its marginally better classification performance.</p>
-<p>We considered different network designs from either of the 3 schemes described above. Below, we show the different in classification performance with equivalent models from 'no scheme' and 'dense scheme'. Specifically, both implement ResNet18 x4. In 'no scheme' we feed the outputs from the terminal global average pool in the 4 ResNet18 networks directly to a dense softmax layer. In 'dense scheme', we feed the outputs from the terminal global average pool in the 4 ResNet18 networks through a series of dense relu layers and dropouts before a final dense softmax layer.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1dmHDjU_pw3aDpRWfKI1i3UK0rLvbGWUO">
-Figure 18. Classification performance for networks of 'no scheme' vs. 'dense scheme'.</p>
-<p>We saw quite consistenyl that 'no scheme' models performed better than 'dense scheme' models. 'No scheme' models stagnated to a higher training and validation accuracy faster than 'dense scheme' models. We anticipated that 'dense scheme' models would allow for more complicated decision boundaries to incorporate information across scale. We also expected 'dense scheme' models to take longer to train because of the reintroduction of dropout back into the networks. However, since 'no scheme' models generally performed better, we stuck with 'no scheme' models for the majority of experiments.</p>
-<p>We considered working with deeper networks. ResNet networks are notorious for being able to go to significantly deeper depths, boasting better performance on datasets like ImageNet[6]. We experimented with the next deepest network to consider if it was worth going far deeper. Results are from ResNet18 x4 vs ResNet34 x4 models.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1GuRST7-zGfcis5pBGZq8zGpYc2tOeqdS">
-Figure 19. Classification performance for networks with 18 layer vs 34 layer depth intermediate modules.</p>
-<p>We saw marginally better validation accuracy and noticeably better training accuracy for the ResNet34 x4 models. However, this came at a significant computational cost. Given our computational resources, we elected to stick with ResNet18 x4 models because it offered the best tradeoff between validation performance and compute for a forward pass.</p>
-<p>During training, we considered several different batch sizes. We were performing training across 4 GPUs and expected to use 256 or 512 images per batch to stick closely to the original ResNet papers. We briefly considered using much larger batch sizes of 1024 images to speed up training. Results are below are from a batch size of 256 or 1024 for ResNet18 x4 models.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1FCb0LIHc0diK3XPZ-K9uvEbxAebsVB7Q">
-Figure 20. Classification performance for networks with 256 vs 1024 batch size.</p>
-<p>We observed marginally better validation performance with a batch size of 256 and much better training performance. This is not entirely unexpected given the current understanding of the tradeoff between batch size, network training time and network quality. We elected to stick with a batch size of 256 despite the slightly higher computational cost due to the network's better performance.</p>
-<p>We implemented both a standard weight decay with every epoch and a weight decay with validation loss stagnation. The hyperparamters we used for the learning rate decay followed closely from the original ResNet papers. We investigated shifting the hyperparameters slightly with almost no change in network performance. Results below from ResNet18 x4 models highlight the role of learning rate decay.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=18YbMlzsUyo7U6ObXxvTmvjoDZEGcbULg">
-Figure 21. Classification performance for a ResNet18 x4 model with learning rate decay at plateau.</p>
-<p>In general, with learning rate decay, we observed that training and validation accuracy would stagnate after a few epochs of training. By implementing a drop in learning rate when the loss validation plateaus for several epochs, we allow for the networks to navigate the loss landscapes at increasing resolution. The effect of this in the training is quite clear. For example, consider a typical example shown above, where the training and validation performance spike after the learning rate is dropped following a brief plateau.</p>
-<p>Note that we have always shown good crops generated from retinal sampling. This is not always the case since we're simply taking a central fixation. In either the training or validation set, this could result in cases where the generated crops do not capture the object to be identified at all. Below is a relatively tame example of this.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=11bgjGDjIknckWZzjPbogMG0Z0XHNelJS">
-Figure 22. Above: an example of good crops from retinal sampling. Below: an example of bad crops from retinal sampling.</p>
-<p>Notice that in the top panel, the crops from retinal sampling clearly capture details of the object of interest at multiple scales. However in the bottom panel, the crops from retinal sampling capture only some parts of the object of interest visible in the original image. This is a limitation of the current setup.</p>
-<p>We then went back and compared the performance of the models against corresponding state-of-the-art model on a top-1 accuracy and top-5 accuracy basis. Top-5 accuracy is an interesting metric to consider on ImageNet as the dataset has a considerable amount of both breadth and depth (e.g. species of different turtles). Below, we compare the best ResNet18 x4 model against the related ResNet architectures.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1W3iEzsrYknOqMVSW7MdxzODPBaI1wyPI">
-Figure 23. Accuracy of ResNet18 x4 model compared to state-of-the-art models.</p>
-<table>
-<thead><tr>
-<th style="text-align:left">Model</th>
-<th style="text-align:center">Top-1 Accuracy</th>
-<th style="text-align:center">Top-5 Accuracy</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">ResNet 18</td>
-<td style="text-align:center">68.24</td>
-<td style="text-align:center">88.49</td>
-</tr>
-<tr>
-<td style="text-align:left">ResNet 18 x4</td>
-<td style="text-align:center">47.25</td>
-<td style="text-align:center">71.28</td>
-</tr>
-<tr>
-<td style="text-align:left">ResNet 50</td>
-<td style="text-align:center">74.81</td>
-<td style="text-align:center">92.38</td>
-</tr>
-</tbody>
-</table>
-<p>We used the top-1 and top-5 accuracies reported for pretrained versions of the models. Interestingly, our networks performance approaches the state-of-the-art models. This is a promising result considering that this is still preliminary work.</p>
-<p>The tradeoff between computational cost for a forward pass in our models is not clear. Our models employ 4 entirely seperate networks to process each crop before aggregrating over the terminal hidden state for prediction. At the same time, the models use a much smaller input than is typical. We calculated the number of floating point operations for a forward pass for implementations of the models for comparison.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1TSivXinR72wWhes5dOQK_ZSA8UqHszYl">
-Figure 24. FLOPS for forward pass for ResNet18 x4 model compared to state-of-the-art models.</p>
-<table>
-<thead><tr>
-<th style="text-align:left">Model</th>
-<th style="text-align:center">Floating-Point Operations per Forward Pass</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">ResNet 18</td>
-<td style="text-align:center">3.6e9</td>
-</tr>
-<tr>
-<td style="text-align:left">ResNet 18 x4</td>
-<td style="text-align:center">7.1e9</td>
-</tr>
-<tr>
-<td style="text-align:left">ResNet 50</td>
-<td style="text-align:center">7.7e9</td>
-</tr>
-</tbody>
-</table>
-<p>We see that our models use significantly more compute than the corresponding state-of-the-art models. This is a result of the design of ResNet18. In the typical architecture, there is a max pool with large kernel size to almost immediately bring down the input from ~200x200 to ~50x50. This greatly reduces the compute for a forward pass in ResNet18. However, to avoid the dimension of the hidden state collapsing to 1x1 in our ResNet18 x4 models, this max pool was removed. This, combined with our use of 4 seperate networks to process each crop results in the floating-point operations per forward pass increasingly greatly. For example, notice above that our ResNet18 x4 model uses about as many floating point operations with sister ResNet18 networks as a single typical ResNet50 architecture.</p>
-<p>To attempt to understand the performance of our model to inform additional changes to the design, we considered more closely how the networks were misclassifying objects in the validation set. For example, one of the things we considered was the number of examples in the validation set (out of 50 examples per class) for each object category that was misclassified.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1qVCviH1-If1Og7feFkzGEhxyZ87iahv6">
-Figure 25. Distribution of number of misclassifications in the validation set.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1dRUgZ_VO2Riq0qkvs-A02VRO10nHZGlC">
-Figure 26. Classes that were most misclassified in the validation set. Top: Plastic Bag (misclassified 47/50 times), Middle: Buckle (misclassified &gt;40/50 times), Bottom: Velvet (misclassified &gt;40/50 times).</p>
-<p>We obserse a normal distribution for the number of misclassifications in the validation set. This does not provide a clear target to pursue (if for example we saw a bimodal with a peak around ~40-50). We also looked at the classes that were most often misclassified. A possible reason for the misclassification of these classes was that in the validation set images, the objects would not often appear in the central part of the image (especially true for for the 'Plastic Bag' class).</p>
-<p>We also considered to what extent each crop in the retinal sampling was contributing to the final classification decision. We setup a simple test where we zeroed out different crops in a forward pass and noted the final classification prediction.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1FDJjCFU09tM1O1qFKJiLPuaDKVRX8GFI">
-Figure 27. Prediction from ResNet18 x4 model with various crops from retinal sampling zeroed out.</p>
-<p>We noticed that the network was learning to use almost entirely the largest crop (320x320, with gaussian blur of largest radius and downsampled to 40x40) in making it's prediction. We believe that going forwards, we might alleviate this by training each tower in the models seperately and combining the individual towers in a final learning stage. This way, we might ensure that we get a more proportionate contribute to the final prediction from each retinal crop. Alternatively, we might also be able to accomplish this by performing a global average pooling over the scales (i.e. the crops) at the final layer before feeding into the decision softmax layer.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Scale,-Translation-and-Clutter-Invariance-">Scale, Translation and Clutter Invariance <a name="Invariance" /><a class="anchor-link" href="#Scale,-Translation-and-Clutter-Invariance-">&#182;</a></h3><p>We intend to first tune the design of the network or how it's trained to ensure that we have more porpotionate contributions from each scale level in the retinal sampling towards the final model prediction. We present below several sanity checks on the scale, translation and clutter invariance of the model. Note that our models did not employ scale or translational augmentation during training. We compare our ResNet18 x4 model against a pre-trained ResNet18 network.</p>
-<p>We first considered a simple test for the invariance to scale by scaling up an image at two different positions. We then compared the classification to compare robustness to this scaling for the models.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1wWZYjRB9CcTnLk5is5_R_AeHuTwMVasK">
-Figure 28. Simple test for ResNet18x4 to consider robustness to changes in image scale.
-<img src="http://drive.google.com/uc?export=view&id=1V5_I9DSeQwsJRg2VH0aAPbqxsfxJn-qd">
-Figure 29. Simple test for ResNet18 to consider robustness to changes in image scale.</p>
-<p>We see that the vanilla ResNet18 appears to be more robust to changes in image scale for the simple test. For both models, we see a significant drop in confidence in the correct prediction when scale adjusted with fixation at the head. For ResNet18, we see a high confidence still when scale is adjusted with fixation at the feet while the ResNet18 x4 breaks down here.</p>
-<p>We perform a simple test for invariance to translation by moving the object of interest to different positions in the image. We then compared the classification to compare robustness to translation for the models.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1IYtBUwEQTDq29bnfgnrKHbLaoIz8oNDJ">
-Figure 30. Simple test for ResNet18x4 to consider robustness to image translation.
-<img src="http://drive.google.com/uc?export=view&id=1BbHzw89BIRowxsJcoyfiAXa-xr_LJR97">
-Figure 31. Simple test for ResNet18 to consider robustness to image translation.</p>
-<p>We see that ResNet18 x4 appears to be more robust to translations of the object. For both objects, we retrieve near perfect confidence for translations to the right. For translations to the left, ResNet18 x4 performed proportionately better than ResNet18.</p>
-<p>We perform a simple test for invariance to noise flanking from either sides. We compared the classification to compare robustness to flanking noisy clutter for the models.</p>
-<p><img src="http://drive.google.com/uc?export=view&id=1xZrIIIKNSTEy35jxSGRaowUxx2JKALC7">
-Figure 32. Simple test for ResNet18x4 to consider robustness to flanking noise.
-<img src="http://drive.google.com/uc?export=view&id=143bwWT4RpFvg7sKLmpsFdcofMjJWxJ30">
-Figure 33. Simple test for ResNet18 to consider robustness to flanking noise.</p>
-<p>We see that both ResNet18 x4 and ResNet18 are comparably robust to the introduced noise. In fact, the confidence went up slightly from the baseline for ResNet18.</p>
-<p>None of the tests presented above are very thorough. These were simply intended as preliminary checks to establish the current state of the networks. The current simple tests do not differentiate the networks well.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Future-Work">Future Work<a name="FutureWork" /><a class="anchor-link" href="#Future-Work">&#182;</a></h3><p>There are many future directions for the work. We list here the most immediate 5:</p>
-<ol>
-<li><p>Redesign network or change learning strategy to ensure more proportionate contribution to final prediction from the different crops from retinal sampling.</p>
+<li><p><a href="#SourceCode">Source Code and Evaluation</a></p>
 </li>
-<li><p>Implement multiple fixation points at training/validation time instead of a single central fixation.</p>
+<li><p><a href="#SoftwareDesign">Software Design and How to Use Our Software</a></p>
 </li>
-<li><p>Reimplement retinal sampling using only tensorflow/keras functions to automate gradient propogation through retinal sampling (currently done manually when necessary).</p>
+<li><p><a href="#Odyssey">Technical Description of the Compute Infrastructure</a></p>
 </li>
-<li><p>Automate generation and evaluation of test images for scale, translation and clutter invariance for the networks.</p>
+</ol>
 </li>
 </ol>
 
@@ -13418,16 +13214,443 @@ Figure 33. Simple test for ResNet18 to consider robustness to flanking noise.</p
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="References">References<a name="References" /><a class="anchor-link" href="#References">&#182;</a></h3><p>[1] Eccentricity Dependent Deep Neural Networks: Modeling Invariance in Human Vision (AAAI 2017, Chen, et al.)</p>
-<p>[2] Do Deep Neural Networks Suffer from Crowding? (NIPS 2017, Volokitin et al.)</p>
-<p>[3] Computational role of eccentricity dependent cortical magnification (CBMM Memos 2014, Poggio et al.)</p>
-<p>[4] ImageNet: A Large-Scale Hierarchical Image Database (CVPR 2009, Deng, et. al.)</p>
-<p>[5] Keras Pre-Trained Models <a href="https://keras.io/applications/">https://keras.io/applications/</a></p>
-<p>[6] Deep Residual Learning for Image Recognition</p>
-<p>[7] Tensorflow &amp; Keras Model Zoo <a href="https://github.com/qubvel/classification_models">https://github.com/qubvel/classification_models</a></p>
+<h1 id="Introduction-and-Motivation">Introduction and Motivation<a name="IntroductionAndMotivation" /><a class="anchor-link" href="#Introduction-and-Motivation">&#182;</a></h1><p>DC Security Constrained Optimal Power 
+Flow (DC-SCOPF) is a key problem in power systems operations for determining the optimal operation set points of controllable power injections in the event of possible contingencies. This problem can be formulated as a constrained optimization problem for minimizing the cost of power injection under the physical constraints of the power system. The timescale for these systems can range from a day before to near-real time. As more contingencies are considered - the scale of the problem can quickly grow. Thus, quickly and robustly solving DC-SCOPF remains an open challenge. Interior Point Methods (IPM) have been shown to be an effective means of solving the DC-SCOPF effectively taking advantage of the structure of the problem to achieve efficient convergence <sup>[[1]](#Chiang2015), [[2]](#PDIP)</sup>. However, one of the major bottlenecks that is a large spares matrix inversion is needed at each Newton Step. In this work, we use multi-grid solvers which have been successful in solving PDEs and develop a hierarchical parallel model with distributed and shared memory parallel architectures for expediting the calculation of the Newton step in DC-SCOPF.</p>
+<h3 id="How-is-our-work-different-from-other-words-that-tackle-this-problem?">How is our work different from other words that tackle this problem?<a name="HowWorkIsDifferent" /><a class="anchor-link" href="#How-is-our-work-different-from-other-words-that-tackle-this-problem?">&#182;</a></h3><p>Of late, multiple works have used Interior Point Methods in order to solve the DC-SCOPF optimization problem (linear program) <sup>[[1]](#Chiang2015), [[2]](#PDIP)</sup>. Given that the matrices associated with power systems are sparse, specialized interior point method (IPM) solvers need to be developed for security constrained optimal power flow (DC-SCOPF). Such structure exploiting IPMs usually are plagued by a bottleneck of taking large/sparse inverses. 
+To address this, we explore how to leverage ideas from multigrid solvers for improving computational efficiency of IPMs for DC-SCOPF. Algebraic multigrid (AMG) has drawn much interest for scaling performance. <sup>[[3]](#PARMS)</sup> On the other hand, there is a lack of work on developing multilevel solvers for sparse matrices associated with power systems, which demonstrate specific connectivity from the physical system. In this work, we develop a multilevel solver specifically crafted for the strongly local structure of the DC-SCOPF problem and at the same time, propose an efficient distributed solving scheme that takes advantage of the inherent local block nature of the system to effectively parallelize the solving procedure.</p>
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Problem">Problem<a name="Problem" /><a class="anchor-link" href="#Problem">&#182;</a></h1><h3 id="Notation-and-Preliminaries-">Notation and Preliminaries <a name="NotationAndPreliminaries" /><a class="anchor-link" href="#Notation-and-Preliminaries-">&#182;</a></h3><p>In this problem, we consider the linearized (DC) formulation of the optimal flow problem. Consider a multi-area interconnected power network with $n_{bus}$ number of buses represented by a graph with potentially $n_{bus}^2$ edges (transmission lines) connecting the buses. Let the actual number of edges be $n_{line}$. Let $\mathbf{f} \in \mathbb{R}^{nline}$ denote the real power flow along every power line and let $\mathbf{p} \in \mathbb{R}^{n_{bus}}$ denote the power injection profile i.e. the value of the net real power injection at each bus. Let $\mathbf{\theta}$ be the voltage phase angle with respect to a reference. The power injection and power flow are linearly related to the power angle as
+$$\mathbf{p} = \mathbf{B}_{dc} \mathbf{\theta},$$
+$$\;\;\mathbf{f} = \mathbf{D}_{dc} \mathbf{A}_{dc} \mathbf{\theta} $$
+where $\mathbf{B}_{dc}$ is the bus-susceptance matrix, $\mathbf{A}_{dc},\mathbf{D}_{dc}$ represents the line-bus incidence matrix and the line susceptance matrix and all these matrices represent  and all of these matrices naturally encode the network structure.</p>
+<p><strong><em>Contingency</em></strong> : We define a single contingency associated with a line $l$ as the scenario in which line $l$ is inactive. A contingency set could be thought as the collections of lines $l$ that are inactive. In concept the number of said sets can grow extremely large as the number of lines grows.</p>
+<p>In the event of these failures, the power system should still be resilient and we need to find optimal power injection profile in the event of line failures at the minimum possible cost incurred.</p>
+<h3 id="DC-Power-Flow-Model-">DC Power Flow Model <a name="DCPowerFlowModel" /><a class="anchor-link" href="#DC-Power-Flow-Model-">&#182;</a></h3><p>The DC-SCOPF formulation we consider is a linear optimization program with state variables equal to
+the bus voltages $\mathbf{\theta}$ (excluding the reference bus) and control variables set to the power injections $\mathbf{p}$. The equality constraints enforce power balance at each bus, which are linear under the DC model, and the inequality constraints are limits on the power injections and bidirectional power flows.</p>
+$$\min_{\theta^{(0)},\mathbf{\theta}^{(0)}\dots \theta^{(k)},\mathbf{p}} c_{0}(\mathbf{p}) 
+\\ {\text { s.t. } \mathbf{p}_{min} \leq \mathbf{p} \leq \mathbf{p}_{max}} \\
+\text{For each contingency $k =0,1 \dots K$} \\
+\mathbf{B}_{dc}^{(k)}\mathbf{\theta}^{(k)}-\mathbf{p}=\mathbf{0} \\ 
+{\mathbf{f}_{min} \leq \mathbf{D}_{dc}^{(k)} \mathbf{A}_{d c}^{(k)} \mathbf{\theta}^{(k)} \leq \mathbf{f}_{max}}$$<p>The linear program in the equations above can be written in matrix form as follows:</p>
+\begin{equation}
+    \begin{split}
+    \min_ {\{\mathbf{\theta}^{(k)}\}_{k=0}^K,\mathbf{p}} &amp; c_0(\mathbf{p}) \\
+    \text{s.t.} \; \mathbf{G}_p \; \mathbf{p} &amp;\leq \underbrace{\begin{bmatrix}
+    \mathbf{p}_{min}\\
+    \mathbf{p}_{max}
+    \end{bmatrix} }_{\mathbf{c}_p^T}
+    \\
+    \text{For each contingency}&amp;\text{ k = (0,...K)} \\
+   \mathbf{H}_k \begin{bmatrix}
+    \mathbf{\theta}^{(k)} \\
+    \mathbf{p}
+    \end{bmatrix} &amp;= 0 \\
+    \mathbf{G}_k \theta^{(k)} &amp;\leq \underbrace{\begin{bmatrix}
+    \mathbf{f}_{min}\\
+    \mathbf{f}_{max}
+    \end{bmatrix}}_{\mathbf{c}_i^T}
+\end{split}
+\end{equation}<p>The first constraint in ensuring that power injection profile $p$  is within an operating min/max. The equality per contingency is ensuring the power equations hold true in every contingency. The second inequality is ensuring that the real power flow along the various lines is within an allowable limit.</p>
+<p>The dual variables associated with the inequality constraints in power injection variables and power flow variables are $\mathbf{\lambda}^{(p)}$ and $\mathbf{\lambda}^{(k)}$ respectively.  The dual variables associated with the equality constraints are given by $\mathbf{\nu}^{(k)}$. With these Lagrangian duals, the Newton step in bordered block diagonal form is:</p>
+\begin{equation}
+    \begin{bmatrix}
+    \mathbf{M}^{(0)} &amp; \mathbf{0} &amp; .... &amp; \mathbf{0} &amp; \mathbf{C}^{(0)} \\
+      \mathbf{0} &amp; \mathbf{M}^{(1)} &amp; .... &amp; \mathbf{0} &amp; \mathbf{C}^{(1)} \\
+      \vdots &amp; \vdots &amp; \vdots &amp; \vdots &amp; \vdots \\
+      \mathbf{0} &amp; \mathbf{0} &amp; .... &amp; \mathbf{M}^{(K)} &amp; \mathbf{C}^{(K)} \\
+      [\mathbf{C}^{(0)}]^T &amp; [\mathbf{C}^{(1)}]^T &amp; .... &amp; [\mathbf{C}^{(K)}]^T &amp; \mathbf{C}_p
+    \end{bmatrix}
+    \begin{bmatrix}
+        \triangle \mathbf{z}{(0)} \\
+        \triangle \mathbf{z}{(0)} \\
+        \vdots \\
+        \triangle \mathbf{z}{(K)} \\
+        \triangle \mathbf{z}{(p)} \\
+    \end{bmatrix} = - \mathbf{r}_*
+\end{equation}<p>where</p>
+\begin{align*}
+    \triangle \mathbf{z}^{(k)} &amp;= \begin{bmatrix}
+     \triangle \mathbf{\theta}^{(k)} \\
+     \triangle \mathbf{\lambda}^{(k)} \\
+     \triangle \mathbf{\nu}^{(k)}
+    \end{bmatrix}, \quad  \triangle \mathbf{z}^{(p)} =\begin{bmatrix}
+    \triangle \mathbf{p} \\
+     \triangle \mathbf{\lambda}_p
+    \end{bmatrix} \\[10pt]
+    \mathbf{M}^{(k)} &amp;= \begin{bmatrix}
+    \mathbf{0} &amp; \mathbf{G}_k^T &amp; \mathbf{H}_{k,\theta}^T \\
+    -D(\mathbf{\lambda}_k \mathbf{G}_k) &amp; -D(\mathbf{\theta}_k \mathbf{G}_k - c_I) &amp; 0 \\
+    \mathbf{H}_{k,\theta} &amp;  \mathbf{0} &amp;  \mathbf{0}
+    \end{bmatrix} \quad k=0,1,...K \\[10pt]
+    \mathbf{C}^{(k)} &amp;= \begin{bmatrix}
+    \mathbf{0} &amp;  \mathbf{0} \\
+    \mathbf{0} &amp;  \mathbf{0} \\
+    \mathbf{H}_{k,p} &amp;  \mathbf{0} \\
+    \end{bmatrix}, \quad  \mathbf{C}_p = \begin{bmatrix}
+    \nabla^2c_0(\mathbf{p}) &amp; \mathbf{G}_p^T \\
+    -D(\mathbf{\lambda}_p)\mathbf{G}_p &amp; -D(\mathbf{G}_p \mathbf{p} - \mathbf{c}_p)
+    \end{bmatrix}
+\end{align*}<h3 id="Two-level-Serial-Multilevel-Solver-">Two-level Serial Multilevel Solver <a name="TwoLevelSerialMultilevelSolver" /><a class="anchor-link" href="#Two-level-Serial-Multilevel-Solver-">&#182;</a></h3><p>We are using a multi-level solver described in Algorithm 1  as a serial implementation for solving the Newton Step once the global system is prepared with all contingencies. The entire serial procedure involves two steps and the times we report for serial operations in our results include both these operations together.</p>
+<ul>
+<li>Generating the system under contingencies from the base system</li>
+<li>Multi-Level Solving (Algorithm 1)</li>
+</ul>
+<h5 id="ALGO-1-:-Multi-Level-Solver-for-the-SCOPF-Problem">ALGO 1 : Multi-Level Solver for the SCOPF Problem<a class="anchor-link" href="#ALGO-1-:-Multi-Level-Solver-for-the-SCOPF-Problem">&#182;</a></h5><ol>
+<li>Find an independent set permutation $\mathbf{P}_l$</li>
+<li>Apply permutation $\hat{A} = \mathbf{P}_l^T\mathbf{A}_l\mathbf{P}_l$</li>
+<li>Compute ILU factorization of $\hat{A}$ .</li>
+<li>Solve via forward substitution: $\mathbf{L}_l\mathbf{f}_L'=\mathbf{f}_l$ for $\mathbf{f}_l'$</li>
+<li>Descend to "coarser" level system: compute $b_{l+1} = \mathbf{g}_l - \mathbf{E}_l\mathbf{U}_l^{-1}\mathbf{f}_l'$</li>
+<li>If level $l$ equals terminal level $L$ then
+solve $\mathbf{A}_{l+1}\mathbf{y}_l = \mathbf{b}_{l+1}$</li>
+<li>Else Recurse with the same algorithm using $\mathbf{A}_{l+1},\mathbf{b}_{l+1}$</li>
+<li>Ascend to finer level system:compute $\mathbf{f}_l'' = \mathbf{f}_l'-\mathbf{L}_l^{-1}\mathbf{F}_l\mathbf{y}_l$ </li>
+<li>Solve via backward substitution: $\mathbf{U}_l\mathbf{u}_l=\mathbf{f}_l''$</li>
+</ol>
+<p>We developed a callgraph from profiling our code (see Figure 1 below), we found that there were three main bottlenecks. The biggest bottleneck was at the terminal step; secondly we found bottlenecks when descending from finer to courser systems; lastly, there was a small bottleneck when generating the system matrix.</p>
+<p><img src="http://drive.google.com/uc?export=view&id=1E5Bu77jBSXmtBAKAmJZOjladUiEPS5Ew"></p>
+<center> Figure 1: Callgraph showing bottlenecks </center>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Description-of-Parallel-Solution">Description of Parallel Solution<a name="DescriptionOfParallelSolution" /><a class="anchor-link" href="#Description-of-Parallel-Solution">&#182;</a></h1><p>In this section, we describe our parallelization plan (Figure 1) which aims to tackle three components.</p>
+<ul>
+<li>Step 1 : Parallelize the generation of the system matrix with contingencies with the base system as input</li>
+<li>Step 2 : Parallelize the global system into local system and descend from a finer system to a coarser system (Step 5 in Algorithm 1)</li>
+<li>Step 3 : Parallelize the terminal level solver (Step 6 in Algorithm 1) </li>
+</ul>
+<h3 id="Block-1:-Generation-of-the-system-with-contingencies-">Block 1: Generation of the system with contingencies <a name="Block1" /><a class="anchor-link" href="#Block-1:-Generation-of-the-system-with-contingencies-">&#182;</a></h3><p>In our problem, we assume that the base system is provided without incorporating contingencies i.e. we already know the power system as a graph and the physical constraints relating to the bidirectional power flows between the lines and min,max power injections possible at each line. The first step is to then determine the full system under a given number of contingencies. In this case, we need to additionally generate power flow constraints with respect to the new contingencies that are introduced into the circuit.</p>
+<p>In this work, \emph{we limit ourselves to six contingencies $(K=6)$} as proof of concept of our work, but in reality this could scale to potentially up to $O(n_{l})$ contingencies. Generating with just 6 contingencies already gives us a system that is characterized by a matrix $\mathbf{A}$ which is of the order of</p>
+<p>$100000\times100000$ and hence, generating a parallel solution for such a system is a solid proof of concept in itself. Since the original system without the contingencies is not big enough for a huge memory requirement and the contingencies themselves originate independently and are later connected only with the power flow dynamics of the system, this is equivalent to running a "for" loop iteration in a serial version where the components of the "for" loop have no disruption on each other.Thus, we can generate the entire system for all contingencies in a shared memory architecture using PyMP. The expected theoretical speedup for this setting should be approximately K(=6) in our case since the system is generated. This step of parallelization is a case of <strong>weak scaling</strong>, where we can increase the number of processes as the problem size in terms of the number of contingencies grow. In the process flow diagram shown in Figure 3, this step can be seen as the first step that generates the initial level 0 system $A^0$ from the base case system matrix A in a shared memory parallel setup across $K(=6)$ contingencies.</p>
+<h3 id="Block-2:-Independent-System-Design-and-Distributing-the-Global-System-in-Local-Systems---Distributed-Solution-of-step-5-in-Algorithm-1-">Block 2: Independent System Design and Distributing the Global System in Local Systems - Distributed Solution of step 5 in Algorithm 1 <a name="Block2" /><a class="anchor-link" href="#Block-2:-Independent-System-Design-and-Distributing-the-Global-System-in-Local-Systems---Distributed-Solution-of-step-5-in-Algorithm-1-">&#182;</a></h3><h4 id="Motivation-and-two-level-distributed-SC-OPF-preliminaries-for-K-contingencies-">Motivation and two-level distributed SC-OPF preliminaries for K contingencies <a name="TwoLevelPreliminaries" /><a class="anchor-link" href="#Motivation-and-two-level-distributed-SC-OPF-preliminaries-for-K-contingencies-">&#182;</a></h4><p>The reason why a general system of equations cannot be inverted effectively in a completely distributed setting because of the dependence of variables among many other variables if the system is underpinned by a strongly connected graph. This would entail significant communication and synchronization overheads and any advantage gained out of potential parallelization could be lost. On the other hand, it is well-known that power systems have strong intrinsic local sub-structures as all buses are not expected to be connected to all the other buses. In such a setting, any solver that we build should take advantage of this fact and specialized multi-level methods need to be devised. In particular, we plan to design the system with maximum independence possible when distributed into local systems so that most number of variables could be solved while at the same time, minimizing the necessity of communication and synchronization to the best extent possible.</p>
+<p>In a distributed setting, we aim to parallelize the global Newton step system described in the previous section by partitioning the variables amongst processors, so that each processor works on a set of local equations and owns a set of variables. The set of unknowns owned by processor i is split into two groups: 1) local unknowns $\mathbf{u}_i$ which are only involved in equations owned by the local processor and 2) interface unknowns $\mathbf{y}_i$ which are involved in both the local equations and equations owned by other
+processors. Partitioning the variables into
+local and interface sets induces a $2\times2$ block structure in the local matrix at every processor $i$</p>
+$$\mathbf{P^TA_iP_i}\begin{bmatrix}
+\mathbf{u}_i \\
+\mathbf{y}_i
+\end{bmatrix} = \begin{bmatrix}
+\mathbf{B}_i &amp; \mathbf{F}_i \\
+\mathbf{E}_i &amp; \mathbf{C}_i
+\end{bmatrix} \begin{bmatrix}
+\mathbf{u}_i \\
+\mathbf{y}_i
+\end{bmatrix} = \begin{bmatrix}
+\mathbf{f}_i \\
+\mathbf{g}_i
+\end{bmatrix}
+$$<h4 id="Distribution-Plan-for-global-to-local-system-for-K-contingencies-">Distribution Plan for global to local system for K contingencies <a name="DistributionPlan" /><a class="anchor-link" href="#Distribution-Plan-for-global-to-local-system-for-K-contingencies-">&#182;</a></h4><p>We choose a permutation set in order to minimize both the communication speed of the inverse. Since our ultimate goal is to descent down using the Schurs complement, $C - EB^{-1}F$ it is advantageous to create $B$ so that the inverse can be quickly taken. We also note that by construction of our BBD matrix, the dual variable $\lambda$ is diagonal. Hence we choose an independent set where we group the $\lambda_i$ associated variables in $B$ and then group $\theta$ and $\mu$ in a block $C$  <sup>[[6]](#MLSolver)</sup>. The resulting permutation can be visualized in Figure 2.</p>
+<p><img src="http://drive.google.com/uc?export=view&id=1emFVDj6onuOSn4W134EsuY1zgasY6pmh"></p>
+<center>Figure 2: Final Permutation structure - note the diagonal matrix for B</center><p>This allows us to create an independent set $B$ that can easily be parallelized across processors based on which contingency it belongs to.</p>
+<p>At level $l$, let us denote the local and interface variables for processor $i$ are denoted $\mathbf{u}^l_i$ and  $\mathbf{y}^l_i$ and work with the independent set permutation:</p>
+\begin{align*}
+\mathbf{u}^0 &amp;= \begin{bmatrix}
+    \mathbf{u}^0_0 \\
+    \mathbf{u}^0_1 \\
+    \vdots \\
+    \mathbf{u}^0_K \\
+    \mathbf{u}^0_p \\
+    \end{bmatrix} \quad \text{where} \;\mathbf{u}^0_i = \triangle \lambda_i, \; \mathbf{u}^0_p = \triangle \lambda_p, \quad
+     \mathbf{y}^0 = \begin{bmatrix}
+    \mathbf{y}^0_0 \\
+    \mathbf{y}^0_1 \\
+    \vdots \\
+    \mathbf{y}^0_K \\
+    \mathbf{y}^0_p \\
+    \end{bmatrix} \quad \text{where} \;\mathbf{y}^0_i = \begin{bmatrix}
+    \triangle \mathbf{\nu}_i \\
+    \triangle \mathbf{\theta}_i \\
+    \end{bmatrix}
+    \; \mathbf{y}^0_p = \triangle \mathbf{p}
+\end{align*}<p>where the subscripts refer to the processor index and the superscripts to the level. The global Newton Step that we saw earlier according to this independent set ordering can be seen as:</p>
+$$\mathbf{A}^0 \begin{bmatrix}
+\mathbf{u}^0 \\
+\mathbf{y}^0
+\end{bmatrix} = \begin{bmatrix}
+\mathbf{B}^0 &amp; \mathbf{F}^0\\
+\mathbf{E}^0 &amp; \mathbf{C}^0
+\end{bmatrix}\begin{bmatrix}
+\mathbf{u}^0 \\
+\mathbf{y}^0
+\end{bmatrix}=\begin{bmatrix}
+\mathbf{f}^0 \\
+\mathbf{g}^0
+\end{bmatrix}$$<p>with each component having the following structural form (we are not presenting the exact values of each sub-component for brevity reasons. One can work out the math from the originally defined global Newton step definition in the previous section to identify the exact analytical formulation of individual components.</p>
+$$\mathbf{B}^0  = \begin{bmatrix}
+\mathbf{B}^0_0 &amp; \mathbf{0} &amp; \dots &amp;  \mathbf{0} &amp;  \mathbf{0}\\
+ \mathbf{0} &amp; \mathbf{B}^0_1 &amp; \dots &amp;  \mathbf{0}  &amp;  \mathbf{0}\\
+\vdots &amp; \vdots &amp; \vdots &amp; \vdots &amp; \vdots \\
+ \mathbf{0} &amp;   \mathbf{0} &amp; \dots &amp; \mathbf{B}^0_K &amp;  \mathbf{0} \\
+  \mathbf{0} &amp;   \mathbf{0} &amp; \dots &amp; \mathbf{0} &amp; \mathbf{B}^0_p &amp;   \\
+\end{bmatrix}
+\quad
+\mathbf{E}^0 = \begin{bmatrix}
+\mathbf{E}^0_0 \\
+\mathbf{E}^0_1 \\
+\vdots \\
+\mathbf{E}^0_K \\
+\mathbf{E}^0_p
+\end{bmatrix}
+ \quad 
+\mathbf{F}^0 = \begin{bmatrix}
+\mathbf{F}^0_0 \\
+\mathbf{F}^0_1 \\
+\vdots \\
+\mathbf{F}^0_K \\
+\mathbf{F}^0_p
+\end{bmatrix} \quad
+\mathbf{C}^0 = \begin{bmatrix}
+\mathbf{C}^0_0 \\
+\mathbf{C}^0_1 \\
+\vdots \\
+\mathbf{C}^0_K \\
+\mathbf{C}^0_p
+\end{bmatrix}$$$$\mathbf{f}^0 = \begin{bmatrix}
+\mathbf{f}^0_0 \\
+\mathbf{f}^0_1 \\
+\vdots \\
+\mathbf{f}^0_K \\
+\mathbf{f}^0_p
+\end{bmatrix} \quad
+\mathbf{g}^0 = \begin{bmatrix}
+\mathbf{g}^0_0 \\
+\mathbf{g}^0_1 \\
+\vdots \\
+\mathbf{g}^0_K \\
+\mathbf{g}^0_p
+\end{bmatrix}$$<p>In this case, our independent set ordering distributes variables across K+2 processors, the base case processor $i=0$, the contingency processors $i=1,2,...K$ and the power injection processor $p$. This way, the global system is able to be distributed as a local system across processors. For example, the local system at process $i$ at level 0 can be written as</p>
+$$\mathbf{A}^0_i \begin{bmatrix} \mathbf{u}_i^0 \\
+\mathbf{y}_i^0
+\end{bmatrix} + \hat{\mathbf{A}}_i^0 \mathbf{y}^0_{i,ext} = \begin{bmatrix}
+\mathbf{B}_i^0 &amp;  \mathbf{F}_i^0 \\
+\mathbf{C}_i^0 &amp; \mathbf{U}_i^0
+\end{bmatrix}\begin{bmatrix} \mathbf{u}_i^0 \\
+\mathbf{y}_i^0
+\end{bmatrix}+\begin{bmatrix} \mathbf{0} \\
+\sum_{j \in \mathcal{N}_i} \mathbf{E}_{ij}^0\mathbf{y}_j^0
+\end{bmatrix} = \begin{bmatrix} \mathbf{f}_i^0 \\
+\mathbf{g}_i^0
+\end{bmatrix}
+$$<p>where, as discussed earlier, $\mathbf{u}_i^0$ refers to local variables that are owned by processor $i$.</p>
+<h4 id="Distributed-Calculation-of-Reduced-System-(Level-l=0--&gt;-l=1)-">Distributed Calculation of Reduced System (Level l=0 -&gt; l=1) <a name="DistributedCalculation" /><a class="anchor-link" href="#Distributed-Calculation-of-Reduced-System-(Level-l=0--&gt;-l=1)-">&#182;</a></h4><p>As we have seen in the previous step, we have managed to reduce the Global Newton step and managed to distribute it across $K+2$ processors - the base case processor ($i=0$), K contingency processors ($i=1,2...K$) and a power injection processor ($p$). To descend from level 0 to level 1, the fine/local variables are eliminated using LU factorization. The level-1 system $\mathbf{A}^1 = \mathbf{C}^0-\mathbf{E}^0(\mathbf{B}^0)^{-1}\mathbf{F}^0$ equals the Schur's Complement and can be calculated in a distributed way due to the sparsity patterns seen in the previous step for $\mathbf{B}^0,\mathbf{C}^0,\mathbf{E}^0,\mathbf{F}^0$. The global system in a distributed computation would be (where each component is evaluated in a different processor and then assembled):</p>
+$$\mathbf{A}^1 = \sum_{i}\begin{bmatrix}
+\mathbf{0} \\
+\vdots \\
+\mathbf{C^0_i} \\
+\vdots \\
+\mathbf{0}
+\end{bmatrix} - \mathbf{M}_i^0  (\mathbf{B}_i^0 )^{-1}\mathbf{F}_i^0 \quad \text{where} \;\; \mathbf{E}^0 = [\mathbf{M}_0^0 \dots \mathbf{M}_K^0,\mathbf{M}_p^0]
+$$<p>Due to the sparsity nature of $\mathbf{B}^0,\mathbf{C}^0,\mathbf{E}^0,\mathbf{F}^0$, there is no need for any communication across the processors while doing the distributed descent step. Each processor solves its local variables independently and constructs its own component of the reduced L1-System. Once we have reconstructed the global matrix at level 1, $\mathbf{A}^1$, we once again use the same independent ordering we used while splitting the L-0 system to get a distributed local system at level 1 which is of the general form:</p>
+$$\begin{bmatrix}
+\mathbf{B}_i^1 &amp;  \mathbf{F}_i^1 \\
+\mathbf{C}_i^1 &amp; \mathbf{U}_i^1
+\end{bmatrix}\begin{bmatrix} \mathbf{u}_i^1 \\
+\mathbf{y}_i^1
+\end{bmatrix}+\begin{bmatrix} \mathbf{0} \\
+\sum_{j \in \mathcal{N}_i} \mathbf{E}_{ij}^1\mathbf{y}_j^1
+\end{bmatrix} = \begin{bmatrix} \mathbf{f}_i^1 \\
+\mathbf{g}_i^1
+\end{bmatrix}$$<p>where the matrices $\mathbf{E}_{ij}^1$ encapsulate all the communication requirements necessary for us to solve the terminal level (L1. Remember we are only building a 2 level system in this work). <sup>[[6]](#MLSolver)</sup></p>
+<h3 id="Block-3:-Distributed-Terminal-Level-Solution-for-K-contingencies---Distributed-Solution-of-step-6-in-Algorithm-1-">Block 3: Distributed Terminal Level Solution for K contingencies - Distributed Solution of step 6 in Algorithm 1 <a name="Block3" /><a class="anchor-link" href="#Block-3:-Distributed-Terminal-Level-Solution-for-K-contingencies---Distributed-Solution-of-step-6-in-Algorithm-1-">&#182;</a></h3><p>Remember that we are solving the system for upto Level-1 only (descending from level-0) and hence we need to devise a terminal solution at this level. We adapt an approximate Distributed Schur's Complement Technique ~\cite{Distr_Schurs} in order to solve the global level-1 system in a distributed way in the previous section. We already discussed how to reduce the global L-1 system into the local processors. In total we have K+2 processors in our distributed setup - one process for each contingency K of them, one processor for the base, and one for the power injection variables.</p>
+<p>It is to be noted that the set of processors can be of two kinds. The base case and all the contingency processors can be grouped into one class and the processor $p$ which handles the power injection variables into another class. The former set of processors have both local $u_i^1$ and global $y_i^1$ variables to solve whereas the interface variables have only the interface variables $y_i^1$ to operate with. This is so because the power injection variables cannot be solved independently without utilizing information on the base and contingency constraints. It needs to exchange information with each of the contingency processors in order to receive the updates to the equality constraint dual variables. Algorithm 2 details how to solve the terminal system in the base case and the contingency processors and Algorithm 3 details how to solve the terminal system for the power injection processors. <sup>[[6]](#MLSolver)</sup></p>
+<p>In the actual solution, we do multiple iterations of Algorithm 2 and 3 since these solutions are iterative. At a high level, the base and each contingency processor receives the interface variable values from the power injection processor, solves one iteration of the solver and send the interface variables back to the power injection processor. The power injection processor receives the interface variables from all the processors, performs one solver iteration on the interface variables and sends them back to the base case and contingency processors.</p>
+<h5 id="ALGO-2-:-Terminal-Level-(L1)-Solution-for-non-power-injection-solvers-[[3]](#PARMS)">ALGO 2 : Terminal Level (L1) Solution for non-power injection solvers <sup>[[3]](#PARMS)</sup><a class="anchor-link" href="#ALGO-2-:-Terminal-Level-(L1)-Solution-for-non-power-injection-solvers-[[3]](#PARMS)">&#182;</a></h5><p><strong>Inputs</strong>: $(\mathbf{A}_i^1,[\mathbf{f_i^1},\mathbf{g_i^1}])$</p>
+<p><strong>To Solve</strong>: $u_i^1, y_i^1$</p>
+<ol>
+<li>Compute ILU factorization of $\mathbf{A}_i^1 \approx \mathbf{L}_i^1\mathbf{U}_i^1$</li>
+<li>Set $\mathbf{y}_i^1 := 0$</li>
+<li>$\mathbf{r} := (\mathbf{L}_i^1\mathbf{U}_i^1)^{-1}\begin{bmatrix}
+\mathbf{f}_i^1 \\ 
+\mathbf{g}_i^1
+\end{bmatrix}$</li>
+<li>$\beta = ||\mathbf{r}||_2, \mathbf{v_1} = \mathbf{r}/\beta$</li>
+<li>Exchange Interface variables with the power injection processor $y_p^{1}$</li>
+<li>Perform <a href="https://en.wikipedia.org/wiki/Generalized\_minimal\_residual\_method">GMRES</a> step and forward backward substitution to update the local variables $u_i^1$ and the interface variables $y_i^1$ in order to communicate it back to the power injection processor $p$.</li>
+</ol>
+<h5 id="ALGO-3-:-Terminal-Level-(L1)-Solution-for-non-power-injection-solvers-[[3]](#PARMS)">ALGO 3 : Terminal Level (L1) Solution for non-power injection solvers <sup>[[3]](#PARMS)</sup><a class="anchor-link" href="#ALGO-3-:-Terminal-Level-(L1)-Solution-for-non-power-injection-solvers-[[3]](#PARMS)">&#182;</a></h5><p><strong>Inputs</strong>: $(\mathbf{C}_p,\;\mathbf{g_i^1})$</p>
+<p><strong>To Solve</strong>: $y_i^1$</p>
+<ol>
+<li>Compute ILU factorization of $\mathbf{C_p} \approx \mathbf{L}_p\mathbf{U}_p$</li>
+<li>Set $\mathbf{y}_i^1 := 0$</li>
+<li>$\mathbf{r} := (\mathbf{L}_i^1\mathbf{U}_i^1)^{-1}\mathbf{g}_i^1$</li>
+<li>$\beta = ||\mathbf{r}||_2, \mathbf{v_1} = \mathbf{r}/\beta$</li>
+<li>Exchange Interface variables with the base and contingency processors $y_i^{1},\; i =0,1,....K$</li>
+<li><p>Perform <a href="https://en.wikipedia.org/wiki/Generalized\_minimal\_residual\_method">GMRES</a> step and forward backward substitution to update the interface variables $y_i^1$ in order to communicate it back to the other processors (base processor and contingency processors) $i=0,1,....K$</p>
+</li>
+<li><p>Distributed Back-substitution (Level $l = 1 \rightarrow l=0$): Distributed Solution of step 9 in Algorithm 1.*
+After solving $\mathbf{u}^1,\mathbf{y}^1$ in the terminal step, to ascend to the level-0 unknowns, back substitution is performed, $\mathbf{B}^0\mathbf{u}^0 = \mathbf{f}^0 -  \mathbf{F}^0\mathbf{y}^0 $ and is done in parallel with no communication needed.</p>
+</li>
+</ol>
+<p><img src="http://drive.google.com/uc?export=view&id=1Y0tLbMATepLVAzXPpQBQbl8FGY4MSLdi"></p>
+<center> Figure 3: Computational graph for the solution </center>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Models-and-Data">Models and Data<a name="ModelsAndData" /><a class="anchor-link" href="#Models-and-Data">&#182;</a></h1><p>We work in a compute intensive application and our only dependence on external inputs was some realizations of real-world power systems with physical constraints i.e. the base matrix $A$.</p>
+<p>We used three test cases for our model (sources are cited): 5 buses<sup>[[5]](#5)</sup>, 189 buses<sup>[[4]](#189/2224)</sup>, and 2224 buses<sup>[[4]](#189/2224)</sup>. The contingencies were generated by imposing appropriate physical and power injection constraints assuming certain randomly selected lines in the power network was tripped and the contingencies were saved. These two datasources are inputs to block 1 which generates the system matrix for the Newton step from contingencies and base cases in parallel.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Parallel-Application-and-Programming-Models-">Parallel Application and Programming Models <a name="ParallelApplicationAndProgrammingModels" /><a class="anchor-link" href="#Parallel-Application-and-Programming-Models-">&#182;</a></h1><p>Figure 3 summarizes the parallel application and the model that was used. Here, we used <strong>PyMP</strong> to parallelize the generation of our initial matrix $A$ from base system and contingencies (ideally we would use a true shared memory process such as OpemMP but this option was not available in Python - our development language). Afterwards, we used distributed memory parallelism with <strong>mpi4py</strong> to do the steps of descent, terminal level solution and the back substitution.Our parallel solution exhibits both <strong>loop-level parallelism</strong> (system contingency generation - block 1) and <strong>task-level parallelism</strong> (distributed solver -blocks 2,3) where each processor works on a different task.</p>
+<p>Our application is strongly <strong>compute intensive</strong> as it is computation-heavy and in all our processors, we are taking the data closer to the compute, which is the prime focus. Since each processor owns its own set of variables, Our programming model is technically <strong>Single Program Multiple Data</strong> (SPMD) while it is to be noted that the set of communications and instructions run for the terminal solution in the power injection processor is different from the rest of the processors in terms of its solving and communication requirements (for e.g. power injection processor has no local variables and has only interface variables which need to be communicated to all processors). Our parallel design exhibits <strong>weak scaling</strong> as we increase the number of processors with increasing problem size (number of contingencies). Also, we expect our parallel system to be <strong>coarse-grained</strong> since the computation to communication ratio is pretty high in each processor as most processors are largely independent because of our smart choice of independent partitioning set.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Complications,-Overheads-and-Advanced-Features-in-the-project-">Complications, Overheads and Advanced Features in the project <a name="COAF" /><a class="anchor-link" href="#Complications,-Overheads-and-Advanced-Features-in-the-project-">&#182;</a></h1><h3 id="Complications-:-Communication-and-Synchronization-overheads-">Complications : Communication and Synchronization overheads <a name="Complications" /><a class="anchor-link" href="#Complications-:-Communication-and-Synchronization-overheads-">&#182;</a></h3><p>The main reason why solving linear systems cannot be done effectively in a distributed fashion is because of the dependence of the system variables on each other. In such a case, all processors need to communicate all their owned variables to all the other processors (in the worst case, this would mean that every processor needs every variable), making communication and synchronization costs overshoot the effects of parallelization. The same effect would be observed in our distributed multi-level system too if we implement parallelization by arbitrarily dividing the set of variables into processors without thinking about the overheads.</p>
+<p>We minimize these communication overheads in the best possible way by taking advantage of the system's internal structure. Our choice of permutation matrix that reorients the system in order to partition the set of variables into base case variables, contingency variables and the power injection variables ensured that strongly locally connected variables were part of the same processor and thus, communication and synchronization overheads were reduced drastically providing us good speedups overall, allowing us to realize the power of parallelization. This was an example of where simple parallelization alone was not enough and it was necessary to adjust the parallelization strategy specific to the structure and requirements of the application in hand.</p>
+<h3 id="Advanced-Features-and-Models-">Advanced Features and Models <a name="AdvancedFeatures" /><a class="anchor-link" href="#Advanced-Features-and-Models-">&#182;</a></h3><p>Beyond mitigating the communication and synchronization overheads, we were also required to leverage some modules of MPI beyond what was used in the course. Remember that the power injection processor interfaces with all the other processors and communicates and synchronizes the interface variables back and forth while the rest communicate only with the power injection processor. To ensure that such a communication and synchronization is possible, we leveraged <strong>MPI's gather, broadcast, and scatter</strong> communication modules.  These modules were used specifically to ensure that the power injection processor continually receive interface information from all the power injections while broadcasting it's own interface to the remaining processors. Also, in all our MPI implementations, we also learned to use <strong>mpi4py</strong> which is a Python equivalent of C-based MPI we learned in class with minor differences in attributes.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Performance-Evaluation-and-Overheads-">Performance Evaluation and Overheads <a name="PerformanceEvaluationAndOverheads" /><a class="anchor-link" href="#Performance-Evaluation-and-Overheads-">&#182;</a></h1><p>All our experiments had a setup as follows : the PyMP based parallelization used K cores (1,2,....6) within one compute node in Odyssey and the mpi4py parallelization used K+2 compute nodes (base, K contingencies, power injection) in Odyssey while each node almost effectively (except for a few implicit multi-core operations of some scipy modules) used only one core per node (despite the available number of cores ranging from 8-32 in each node).</p>
+<p>As referenced in Figure 3, there are three main blocks of parallelization we exploited; using Python Multiprocessing to develop the original matrix $A$, and MPI Distributed Memory when descending down the levels. Figure 4 shows how we can utilize these blocks to speed up the program, and also to improve runtime as the number of contingencies increases.</p>
+<p><img src="http://drive.google.com/uc?export=view&id=1glbyKpZLluKf0vENT8Ie-zkz6rdnjWlL"></p>
+<center>Figure 4: compute times using various blocks of parallelization</center><p>Note that in this figure and the proceeding figures, "K" is used to denote the number of contingencies. Using Python Multiprocessing proved to minimally improve the total runtime; this is mainly due to the fact that PyMP was used for a portion of the program that did not originally contribute to the majority of the compute time. Furthermore, using MPI in Block 2 (non-terminal level) had minimal impact. The majority of the improvement came from utilizing distributed memory at the terminal level where significant set of local and interface variables are solved and naturally, parallelizing this portion had maximal impact on our speedups.</p>
+<p>Furthermore, the beneficial effects of parallelism can be observed when increasing the problem size. In our case, our problem size can be increased, both by increasing the number of buses or the number of contingencies. Figure 5 below shows how the speedup of the program alters with the number of buses and contingencies.</p>
+<p><img src="http://drive.google.com/uc?export=view&id=1jrd8jitFsHveoMKQhXkygzESGnyJ-lZj"></p>
+<center>Figure 5: Speedups vs. contingencies with varying problem sizes</center><p>We also finally compare the relative advantages of using our parallelized multigrid solver compared to using a serial multigrid solver and to using scipy's sparse system solver. Figure 6 below indicates that with larger number of contingencies, our solver has the lowest run-times. This result is interesting because of two reasons - scipy solver internally parallelizes operations across cores within the same node and also, we found that residuals from the scipy solver was as bad as the residuals from our distributed solution, if not worse.</p>
+<p><img src="http://drive.google.com/uc?export=view&id=1AlI119qBXHqd4zxmorm3Tcs5gleuwzqq"></p>
+<center>Figure 6: Total runtimes using various solvers</center>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Discussion-">Discussion <a name="Discussion" /><a class="anchor-link" href="#Discussion-">&#182;</a></h1><p><strong>Effect of different parallel blocks</strong></p>
+<p>We have three parallel blocks in our parallel design - generation of system with contingencies, distributed descent and distributed terminal level solution. From the results, we see that maximum benefit was acquired by distributing the terminal level solver(block 3). This result provides us two valuable learning outcomes - parallelizing the major bottleneck always has the most significant overall value to the speedup and the value of effective design of a partitioning scheme that enhances the independence of the processors and reduces the the communication messages for transferring the  interface variables. The other two parallel blocks (1 and 2), while they provided similar speedups (in terms of percentages) as the terminal solver, were not instrumental for the overall speedups since their serial run-times were not as high as compared to the terminal step as one can observe from the serial code profiling graph.</p>
+<p><strong>Scaling Model and Analysis of our system</strong></p>
+<p>Our experiments also indicate that our model scales reasonably well with the number of contingencies from 1 to 6. Remember that each contingency adds several constraints to the linear program and significantly increases the size of the final matrix system we intend to solve. We analyzed our model along the lines of <em>Iso-time</em> scaling and found that the problem had more or less similar computation time while the number of processors increased with a growing number of contingencies. Also, we note that our parallel design is an example of weak scaling as the number of processors grew with increasing number of contingencies i.e. problem size.</p>
+<p><strong>Problem Size matters</strong></p>
+<p>We also observed the effects of parallelization only when the system became sufficiently large (for e.g. with 6 contingencies and 2224 buses). We believe this was because of two reasons - i) for the smaller systems, the communication and synchronization overheads were trumping any advantages that parallelization provides in terms of speedup and ii) larger sparse systems are all the more likely to be ill-conditioned than smaller sparse systems, thus leading to poorer convergence. Thus, from our experiments, we realize that the need for parallelization always depends on the computational workload that each problem component warrants and thus, grows with the problem size.</p>
+<p><strong>Notes on Numerical Stability</strong></p>
+<p>Notwithstanding the run-time benefits of parallelization, the accuracy of our solution tended to perform marginally worse than the serial multilevel (based on residuals) - we believe that this could be attributed to the poorly conditioned sparse system matrices. Given that this process runs iteratively in the distributed implementation (between the contingency and power injection processors), there are multiple iterative solves of the interface variables and multiple significant communication/synchronization steps - an ill-conditioned matrix can lead to accumulating residuals in an iterative process like ours and could be a reason for our residuals to be non-trivial.  Further work needs to be done to improve the numerical accuracy of the solution - mostly by investing efforts in designing a more thorough preconditioning schemes. It is worth noting, however, that typical built-in direct solvers (scipy.sparse etc.) also tend to perform fairly poorly - and in general across all sparse solvers, getting better handles of condition numbers of a sparse operations is a standard issue when working with this type of structure.</p>
+<p><em>Note: description of the software and compute infrastructure is in the appendix</em></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Lessons-Learned,-Future-Work,-Conclusion-">Lessons Learned, Future Work, Conclusion <a name="LFC" /><a class="anchor-link" href="#Lessons-Learned,-Future-Work,-Conclusion-">&#182;</a></h1><h3 id="Lessons-Learned-">Lessons Learned <a name="LessonsLearned" /><a class="anchor-link" href="#Lessons-Learned-">&#182;</a></h3><p>The first lesson we learned by implementing real-world parallel systems is that blind parallelism is counterproductive and can make the system slower than the serial version. One needs to extensively think and analyze about parallel design before implementation. The first step involves identifying all possible overheads by profiling and ensure that the design guarantees as much independence as possible in the system. In a nutshell, we found that more independence between the processors meant that parallelization was more effective and scalable. The next key lesson is that scaling analysis is always an important aspect of performance evaluation. Many times, we found that the system behaved significantly differently for 1 contingency vs. 6 contingencies in terms of overheads etc. and one needs to ensure that the parallel design is robust enough to scale with an increasing problem size guaranteeing similar properties in terms of time, efficiency etc. This exercise also helped us to develop good practices for parallelizing any real-world application. In the process, we learned and adopted the workflow - profile the base version, identify the inefficiencies and optimize the serial code followed by profiling exercise once again and then, find avenues to parallelize and implement good parallel design and finally, profile to complete one iteration of the process. Any real-world problem entails multiple iterations of this process. Also, beyond the parallelization scope, we also learned significantly about issues on numerical stability, ill-conditioned matrices, robust solvers and accumulating residuals with iterative solvers in an attempt to solve our sparse system.</p>
+<h3 id="Future-Work-">Future Work <a name="FutureWork" /><a class="anchor-link" href="#Future-Work-">&#182;</a></h3><p>Some of the natural extensions and future work for our project are to scale for larger real-world power grids with a higher number of contingencies and buses of the order of 10000s, better preconditioning approaches for our sparse matrices to prevent numerical instability issues and high accumulating residuals in an iterative procedure, evaluate the trade-offs between synchronous (current) and asynchronous (future work) exchange of interface variables between processors, increase the number of levels in our solver in order to more robustly solve sparser systems and finally, attack other similar IPM optimization problems with similar network characteristics such as swarm robotics, cyber-networks and transport grids.</p>
+<h3 id="Conclusion-">Conclusion <a name="Conclusion" /><a class="anchor-link" href="#Conclusion-">&#182;</a></h3><p>Overall, we realized the benefits of effective parallel design for the Newton Step of the SC-OPF problem once we identified significant communication overheads and devised an efficient partitioning scheme. This scheme demonstrates well-engineered load balancing with minimal communication and synchronization overheads by exploiting the system's sparse structure and  significantly speeds up the critical Newton Step for sufficiently large problems. Further work will explore means to improve accuracy by imploring more preconditioning techniques to improve stability.</p>
+<h3 id="Acknowledgement">Acknowledgement<a class="anchor-link" href="#Acknowledgement">&#182;</a></h3><p>We thank Prof.Na Li and her lab members for providing several key insights, inspiration and guidance for this work and also we genuinely thank Ariana Minot for her prior work on this problem.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="References-">References <a name="References" /><a class="anchor-link" href="#References-">&#182;</a></h1><p>[1] Naiyuan Chiang and Andreas Grothey, "Solving security constrained optimal power flow problems by a structure exploiting interior point method" <a name="Chiang2015"></a> <a href="https://doi.org/10.1007/s11081-014-9250-1">https://doi.org/10.1007/s11081-014-9250-1</a></p>
+<p>[2] A. Minot, "A parallel primal-dual interior-point method for DC optimal power flow" <a name = "PDIP"></a>, 2016 Power Systems Computation Conference (PSCC)</p>
+<p>[3] Zhongze Li, "pARMS: a parallel version of the algebraic recursive multilevel solver" <a name = "PARMS"></a>
+<a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/nla.325">https://onlinelibrary.wiley.com/doi/abs/10.1002/nla.325</a></p>
+<p>[4] 189 and 2224 buses <a name = "189/2224"></a> <a href="http://www.nationalgrid.com/uk/Electricity/Codes/gbsqsscode/workinggroups/intgeneration/">http://www.nationalgrid.com/uk/Electricity/Codes/gbsqsscode/workinggroups/intgeneration/</a></p>
+<p>[5] F. Li, "Small test systems for power system economic studies", <a name = "5"></a> IEEE PES General Meeting</p>
+<p>[6] A. Minot, "A Multilevel Solver for Security Constrained OPF" <a name = "MLSolver"></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Appendix-">Appendix <a name="Appendix" /><a class="anchor-link" href="#Appendix-">&#182;</a></h1><h3 id="Source-Code-and-Evaluation-">Source Code and Evaluation <a name="SourceCode" /><a class="anchor-link" href="#Source-Code-and-Evaluation-">&#182;</a></h3><p>Please refer to the Github README for a more in-depth guide to the repo: <a href="https://github.com/Srivatsan-Srinivasan/cs205-final-project/blob/master/README.md">https://github.com/Srivatsan-Srinivasan/cs205-final-project/blob/master/README.md</a></p>
+<p>We evaluated our code through a check on the residuals of the solution. This was computed via the frobenius norm of $ A  x  - B $ where $x$ is the proposed solution by a solver. The implementation of this can be found in the function calculate residuals in the utils library in the solvers library <a href="https://github.com/Srivatsan-Srinivasan/cs205-final-project/blob/master/solvers/utils.py}">https://github.com/Srivatsan-Srinivasan/cs205-final-project/blob/master/solvers/utils.py}</a> and examples of how to invoke our residual profiler can be found in the example scripts. For example,  see the multilevel_check_residuals function (in <a href="https://github.com/Srivatsan-Srinivasan/cs205-final-project/blob/master/profile_multilevel_example.py">https://github.com/Srivatsan-Srinivasan/cs205-final-project/blob/master/profile_multilevel_example.py</a>) or the check_residuals functions implemented in the profiler utilities (in <a href="https://github.com/Srivatsan-Srinivasan/cs205-final-project/blob/master/profile_baseline_example.py">https://github.com/Srivatsan-Srinivasan/cs205-final-project/blob/master/profile_baseline_example.py</a>).</p>
+<p>We noticed that our solvers were plagued by non-trivial residuals. Upon further investigation, we determined that the root cause seemed to be driven by system specific details. An simple direct solve implementation of the solvers using purely the Scipy library and an implementation of the multigrid solver purely in MATLAB all demonstrated similar non trivial residuals.</p>
+<h3 id="Software-Design-and-How-to-Use-Our-Software-">Software Design and How to Use Our Software <a name="SoftwareDesign" /><a class="anchor-link" href="#Software-Design-and-How-to-Use-Our-Software-">&#182;</a></h3><p>Our software implements several version of newton step solvers. The solvers can be run at several different extents of parallelism. All versions of the implements solvers expose a very similar interface. The implementation of the solvers can be found in the 'solvers' folder. Notice that all the solvers, the baseline solver, the serial solver (with optional parallelism at block 1), the parallel solver (with optional parallelism at block 1 and 3) implement a set of common functions that all solvers should have. Namely, all solvers implement the following functions:</p>
+<ol>
+<li><strong>load_data()</strong> Providers a unified interface for loading the necessary data sets for all solvers. Loads the necessary data files to setup the problem for a provided number of buses and contingencies for the power network.</li>
+<li><strong>construct_newton()</strong> Provides a relatively consistent interface for constructing the newton matrix for the newton step solvers. The function takes in the loaded data sets and constructs the newton matrix. For the solvers that implement block 1 level parallelism, the function optionally takes in parameters that define the degree of parallelism (e.g. number of workers for PyMP, etc.)</li>
+<li><p><strong>solver()</strong> This function is the main workhorse and actually implements the logic for the solvers. For example, the scipy solver simply implements a call to the least squares scipy function. Also the fully parallelized solver implements the multi-grid approach with full parallelization (at blocks 1, 2, 3).
+ and optionally an addition function for multilevel parallel solvers that implement the descent to lower levels.</p>
+<ul>
+<li><strong>descend_level()</strong>
+This function implements the logic to descend through block 2 in a distributed fashion and is present only in solvers that support parallelism at block 2.</li>
+</ul>
+</li>
+</ol>
+<p>All available implementations of the solvers are packed into the 'solvers' folder. Common functionality have been abstracted away into two files in this 'solvers' folder. These are:</p>
+<ul>
+<li>utils.py Here, the very generic functions such as data loading, etc. that have specific to do with the newton step problem are implemented. Most noteworthy function implemented here is the calculate_residuals() function.</li>
+<li>solver_utils.py This folders implements the vast majority of the underlying logic for the solvers. For example, you'll find the actual implementation of the multilevel solvers here (see multigrid(), multigrid_parallel(), multigrid_full_parallel.</li>
+</ul>
+<p>Additionally, in the parent folder, you'll find the necessary scripts to easily run these solvers and to profiler them. Notably, for each solver implemented in the 'solver' folder, you'll find two scripts, one to run the solver and another to easily profile these solvers. For example, to view an example usage for the fully parallelized multigrid solver (solver/solver_multilevel.py), you can refer to the simple driver script that just runs the solver for some power network (multilevel_example.py) or the driver script to run the available profilers for the solver (profile_multilevel_example.py). Below are listed the driver scripts and profiler driver scripts.</p>
+<ol>
+<li><p>solver/solver_multilevel.py</p>
+
+<pre><code> 1. multilevel_example.py
+ 2. profile_multilevel_example.py</code></pre>
+</li>
+<li><p>solver/solver_multilevel_serial.py</p>
+
+<pre><code> 1. serial_multilevel_example.py
+ 2. profile_serial_multilevel_example.py</code></pre>
+</li>
+<li>solver/solver_baseline.py
+<pre><code> 1. baseline_example.py
+ 2. profile_baseline_example.py</code></pre>
+</li>
+</ol>
+<p>Again, the common profiler utilities have been moved into profiler library file profile_utils.py.</p>
+<p>Specifically, again, for the fully parallelized multilevel solver, running with a bus size of 2224 and 6 contingencies with parallelization at blocks 1, 2, 3, to just run the solver, you would do <code>python multilevel_example.py</code> and to run different profilers on the script, you would edit the profiler driver script and run it, <code>python profile_multilevel_example.py</code>. For more details, please refer to the docstring in the codes and especially, the repo's README.</p>
+<h3 id="Technical-Details-about-the-Compute-Infrastructrue-">Technical Details about the Compute Infrastructrue <a name="Odyssey" /><a class="anchor-link" href="#Technical-Details-about-the-Compute-Infrastructrue-">&#182;</a></h3><p>We used the Harvard Odyssey Cluster as our sole compute infrastructure resource. All experiments and results reported herein were executed on this cluster. The hardware specs are listed below. Please note that these are the hardware specs available on each node, refer to the Github README for full details.</p>
+<ol>
+<li>Model: Harvard Odyssey Cluster</li>
+<li>Processors: Intel (R) Xeon (R) CPU E5-2683 v4 @ 2.10Ghz, 32 cores with 1 thread per core</li>
+<li>Cache Memory:L1d cache 32K, L1i cache 32l, L2 cache: 256K, L3 cache: 40960K</li>
+</ol>
+<p>Again, please refer to the README for the specific resources that were requested for the experiments. Operating system 
+information can be found below:</p>
+<ol>
+<li>Operating System: CentOS Linux Release 7.4.1708 Codename: Core</li>
+<li>Kernel Version: Linux Version 3.10.0-693.21.1.e17.x86_64</li>
+<li>Operating System Architecture/Machine Architecture/Processor Architecture: x86_64</li>
+</ol>
+<p>For compilers and libraries see README for setup instructions.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
 </div>
     </div>
   </div>
